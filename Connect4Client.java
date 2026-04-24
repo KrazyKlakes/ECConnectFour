@@ -20,6 +20,7 @@ public class Connect4Client extends Application {
     private Circle[] circles = new Circle[48]; // 6x8 grid like working code
     private Label statusLabel = new Label();
     private boolean gameOver = false;
+    private final Object turnLock = new Object(); // NEW: to wait for click
 
     @Override
     public void start(Stage primaryStage) {
@@ -48,7 +49,6 @@ public class Connect4Client extends Application {
                 int clickCol = col;
                 cell.setOnMouseClicked(e -> {
                     if (!gameOver) {
-                        // Send the column number (0-6)
                         handleClick(clickCol);
                     }
                 });
@@ -86,13 +86,18 @@ public class Connect4Client extends Application {
                     int turnStatus = fromServer.readInt();
 
                     if (turnStatus == 1) {
-                        // It's my turn
+                        // It's my turn - wait until handleClick signals done
                         myTurn = true;
                         Platform.runLater(() ->
                                 statusLabel.setText("Your turn - Click a column"));
-                        // Wait for user to click
+
+                        synchronized (turnLock) {
+                            while (myTurn) {
+                                turnLock.wait();
+                            }
+                        }
                     } else {
-                        // turnStatus == 0, wait for opponent's move
+                        // Wait for opponent's move
                         myTurn = false;
                         Platform.runLater(() ->
                                 statusLabel.setText("Waiting for opponent..."));
@@ -102,7 +107,6 @@ public class Connect4Client extends Application {
 
                         Platform.runLater(() -> {
                             if (location >= 0 && location < 48) {
-                                // Show opponent's color
                                 Color opponentColor = (myPlayer == 1) ? Color.YELLOW : Color.RED;
                                 circles[location].setFill(opponentColor);
                             }
@@ -124,7 +128,7 @@ public class Connect4Client extends Application {
                         }
                     }
                 }
-            } catch (IOException ex) {
+            } catch (IOException | InterruptedException ex) {
                 Platform.runLater(() ->
                         statusLabel.setText("Connection error: " + ex.getMessage()));
                 ex.printStackTrace();
@@ -143,12 +147,10 @@ public class Connect4Client extends Application {
 
                 Platform.runLater(() -> {
                     if (location == -1) {
-                        // Invalid move - column full
                         statusLabel.setText("Column full! Try another column");
                         return;
                     }
 
-                    // Show my color at the returned location
                     Color myColor = (myPlayer == 1) ? Color.RED : Color.YELLOW;
                     circles[location].setFill(myColor);
 
@@ -166,7 +168,11 @@ public class Connect4Client extends Application {
                     }
                 });
 
-                myTurn = false;
+                // Signal that turn is done
+                synchronized (turnLock) {
+                    myTurn = false;
+                    turnLock.notifyAll();
+                }
             } catch (IOException ex) {
                 Platform.runLater(() ->
                         statusLabel.setText("Error sending move: " + ex.getMessage()));
