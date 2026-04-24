@@ -1,6 +1,19 @@
 # Connect Four – Networked Multiplayer
 
-A two-player networked Connect Four game built with Java and JavaFX. One player runs the server, and two clients connect to play against each other in real time.
+A two-player networked Connect Four game built with Java and JavaFX. One player runs the server, and two clients connect to play against each other in real time. The server supports multiple simultaneous game sessions.
+
+---
+
+## Screenshots
+
+### Win & Loss Detection
+![Win and Loss](screenshots/ECConnectFour_Win_Loss_Success.png)
+
+### Mirrored Boards – Multiplayer in Sync
+![Multiplayer Success](screenshots/multiplayerSuccess.png)
+
+### Two Different Games Happening at Once
+![Two Games at Once](screenshots/2DiffGamesHappeningAtOnce.png)
 
 ---
 
@@ -54,7 +67,8 @@ Go to **Run → Edit Configurations** and create two configurations:
 
 ```
 ECConnectFour/
-├── Connect4Server.java   # Server + game logic
-├── Connect4Client.java   # Client GUI
-└── ECConnectFour.iml     # IntelliJ module file
+├── Connect4Server.java       # Server + game logic
+├── Connect4Client.java       # Client GUI
+├── screenshots/              # Demo screenshots
+└── ECConnectFour.iml         # IntelliJ module file
 ```
